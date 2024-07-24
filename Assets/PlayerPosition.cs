@@ -1,30 +1,28 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using System.Threading.Tasks;
 
 public class PlayerPosition : MonoBehaviour
 {
-    public float PlayerPosX;
     List<GameObject> minions;
     public int move = 0;
-    public GameObject minionPrefab;
     public int speed = 10;
-    public int jump_force=3;
+    public int jump_force=20;
     public bool jump=true;
+    public GameObject slash;
+    private Rigidbody2D rb;
 
     private void Start()
     {
-        minions = new List<GameObject>();
+        rb= GetComponent<Rigidbody2D>();
     }
     void Update()
     {
-        this.PlayerPosX = transform.position.x;
-        int spawnLocation = 7;
-        if (PlayerPosX >= spawnLocation) this.Spawn();
-        else this.NotSpawn();
+        Attack();
         MovePlayer();
-        checkMinionDead();
     }
+
     void MovePlayer ()
     {
         if (Input.GetKey(KeyCode.LeftArrow)) this.move = -1;
@@ -32,46 +30,32 @@ public class PlayerPosition : MonoBehaviour
         else this.move = 0;
 
         transform.Translate(Vector3.right*move*speed*Time.deltaTime);
-        if ((Input.GetKeyDown(KeyCode.UpArrow) || Input.GetKeyDown(KeyCode.Space))&&jump ) transform.Translate(Vector2.up * jump_force);
-    }
-
-    void Spawn()
-    {
-        Debug.Log("Spawn");
-        if (this.minions.Count >= 7) return; 
-
-        int index = this.minions.Count+1;
-        GameObject minions = Instantiate(this.minionPrefab);
-        minions.name = "MinionPrefab #" + index;
-
-        minions.transform.position = transform.position;
-        minions.gameObject.SetActive(true);
-        this.minions.Add(minions);
-    }
-    void checkMinionDead()
-    {
-        GameObject minion;
-        for (int i = 0; i < this.minions.Count; i++)
+        if ((Input.GetKeyDown(KeyCode.UpArrow) || Input.GetKeyDown(KeyCode.Space)) && jump) 
         {
-            minion = this.minions[i];
-            if (minion == null)
-            {
-                this.minions.RemoveAt(i);
-            }
+            jump = false;
+            rb.AddForce(Vector2.up * jump_force, ForceMode2D.Impulse);
         }
     }
-    void NotSpawn()
+    void Attack()
     {
-        Debug.Log("Not Spawn");
+        if (Input.GetKeyDown(KeyCode.Z))
+        {
+            slash.SetActive(true);
+            Invoke("DelaySlash",0.2f);
+        }
+    }
+    void DelaySlash()
+    {
+        slash.SetActive(false);
     }
     private void OnTriggerEnter2D(Collider2D hitbox)
     {
-        if (hitbox.gameObject.tag == "San")
+        if (hitbox.gameObject.tag == "San" || hitbox.gameObject.tag == "Boss")
             this.jump = true;
     }
     private void OnCollisionExit2D(Collision2D hitbox)
-    {
+    {/*
         if (hitbox.gameObject.tag == "San")
-            this.jump = false;
+            this.jump = false;*/
     }
 }
